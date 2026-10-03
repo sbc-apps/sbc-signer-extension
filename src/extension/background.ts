@@ -761,7 +761,7 @@ async function handleConnectDecision(
  */
 const OPTIONS_PATH = 'src/options.html';
 
-async function focusOrOpenOptionsTab(route: '/' | '/wallet'): Promise<void> {
+async function focusOrOpenOptionsTab(route: '/' | '/wallet' | '/accounts' | `/accounts/${string}`): Promise<void> {
   const targetHash = route === '/' ? '' : `#${route}`;
   const targetUrl = chrome.runtime.getURL(`${OPTIONS_PATH}${targetHash}`);
   const optionsPrefix = chrome.runtime.getURL(OPTIONS_PATH);

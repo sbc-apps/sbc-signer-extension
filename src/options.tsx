@@ -8,6 +8,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { bootCachedProfileTheme } from '@/lib/themeBoot';
 import { App } from './App';
 import { Options } from './pages/Options';
+import { Accounts } from './pages/Accounts';
 import { Wallet } from './pages/Wallet';
 
 bootCachedProfileTheme();
@@ -28,6 +29,8 @@ createRoot(document.getElementById('root')!).render(
         <Routes>
           <Route path="/" element={<Options />} />
           <Route path="/wallet" element={<Wallet />} />
+          <Route path="/accounts" element={<Accounts />} />
+          <Route path="/accounts/:pubkey" element={<Accounts />} />
           {/* Unknown hash → fall back to the settings view. */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

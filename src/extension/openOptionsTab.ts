@@ -16,7 +16,7 @@
  */
 
 /** Routes inside the options.html SPA. Each maps to a hash route. */
-export type OptionsRoute = '/' | '/wallet';
+export type OptionsRoute = '/' | '/wallet' | '/accounts' | `/accounts/${string}`;
 
 /**
  * Ask the background to focus or open the options/wallet tab at the

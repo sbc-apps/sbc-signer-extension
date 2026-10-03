@@ -25,6 +25,7 @@ interface TabsHeaderProps {
 
 const TABS: Array<{ to: string; label: string }> = [
   { to: '/', label: 'Settings' },
+  { to: '/accounts', label: 'Accounts' },
   { to: '/wallet', label: 'Wallet' },
 ];
 

@@ -319,7 +319,7 @@ export type InternalMessage =
        * ('/' for the settings view, '/wallet' for the wallet view).
        */
       kind: 'open-options-tab';
-      route: '/' | '/wallet';
+      route: '/' | '/wallet' | '/accounts' | `/accounts/${string}`;
     }
   | {
       /**

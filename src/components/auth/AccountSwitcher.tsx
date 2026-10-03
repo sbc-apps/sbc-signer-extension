@@ -9,6 +9,8 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar.tsx';
 import { Skeleton } from '@/components/ui/skeleton.tsx';
 import { useLoggedInAccounts, type Account } from '@/hooks/useLoggedInAccounts';
+import { openOptionsTab } from '@/extension/openOptionsTab';
+import { sanitizeUrl } from '@/lib/sanitizeUrl';
 import { genUserName } from '@/lib/genUserName';
 
 interface AccountSwitcherProps {
@@ -21,7 +23,7 @@ export function AccountSwitcher({ onAddAccountClick }: AccountSwitcherProps) {
   if (!currentUser) return null;
 
   const getDisplayName = (account: Account): string => {
-    return account.metadata.name ?? genUserName(account.pubkey);
+    return account.metadata.display_name ?? account.metadata.name ?? genUserName(account.pubkey);
   }
 
   // While the metadata query is in-flight and we don't yet have a name,
@@ -31,10 +33,10 @@ export function AccountSwitcher({ onAddAccountClick }: AccountSwitcherProps) {
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
-        <button className='group flex items-center gap-1 h-8 p-0.5 pr-1.5 rounded-full hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent focus-visible:text-accent-foreground transition-all text-foreground'>
+        <button aria-label='Account menu' className='group flex items-center gap-1 h-8 p-0.5 pr-1.5 rounded-full hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent focus-visible:text-accent-foreground transition-all text-foreground'>
           <Avatar className='w-7 h-7'>
             <AvatarImage
-              src={currentUser.metadata.picture}
+              src={sanitizeUrl(currentUser.metadata.picture)}
               alt={isCurrentUserPending ? '' : getDisplayName(currentUser)}
             />
             <AvatarFallback>
@@ -49,6 +51,12 @@ export function AccountSwitcher({ onAddAccountClick }: AccountSwitcherProps) {
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className='w-56 p-2 animate-scale-in'>
+        <DropdownMenuItem onClick={() => openOptionsTab(`/accounts/${currentUser.pubkey}`)}>
+          <UserIcon className='size-4' />
+          View profile
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => openOptionsTab('/accounts')}>All accounts</DropdownMenuItem>
+        <DropdownMenuSeparator />
         <div className='font-medium text-sm px-2 py-1.5'>Switch Account</div>
         {otherUsers.map((user) => {
           const isPending = isLoading && !user.metadata.name;
@@ -60,7 +68,7 @@ export function AccountSwitcher({ onAddAccountClick }: AccountSwitcherProps) {
             >
               <Avatar className='w-8 h-8'>
                 <AvatarImage
-                  src={user.metadata.picture}
+                  src={sanitizeUrl(user.metadata.picture)}
                   alt={isPending ? '' : getDisplayName(user)}
                 />
                 <AvatarFallback>
