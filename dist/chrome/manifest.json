@@ -38,7 +38,7 @@
     },
     {
       "js": [
-        "assets/inpage.ts-BzdoYF7O.js"
+        "assets/inpage.ts-DaiHsMba.js"
       ],
       "matches": [
         "http://*/*",
@@ -59,7 +59,7 @@
         "src/extension/inpage.ts",
         "assets/sanitize-BkEq17yG.js",
         "assets/content.ts-Cc8215uQ.js",
-        "assets/inpage.ts-BzdoYF7O.js"
+        "assets/inpage.ts-DaiHsMba.js"
       ],
       "use_dynamic_url": false
     }
