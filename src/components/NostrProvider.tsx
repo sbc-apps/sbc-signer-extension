@@ -77,7 +77,7 @@ const NostrProvider: React.FC<NostrProviderProps> = (props) => {
 
       return [...allRelays];
     },
-    eoseTimeout: 200,
+    eoseTimeout: 1000,
   }));
 
   // Derive the current signer from the active login. This mirrors the

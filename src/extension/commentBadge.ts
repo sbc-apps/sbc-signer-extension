@@ -182,33 +182,11 @@ const baseBitmaps = new Map<IconSize, ImageBitmap>();
 const plainIconData = new Map<string, ImageData>();
 const dotIconData = new Map<string, ImageData>();
 
-/**
- * The primary color currently used to tint the icon, as `#rrggbb`.
- * Read on first use from `chrome.storage.local` (where the popup /
- * options / prompt pages persist whatever primary color the active
- * profile theme defines), and refreshed reactively via the
- * `chrome.storage.onChanged` listener installed by `installBadgeHandlers`.
- */
-let activePrimaryHex: string | null = null;
-let primaryLoadPromise: Promise<string> | null = null;
-
-/** Manifest fallback primary, used when no theme has been applied yet. */
-const DEFAULT_PRIMARY_HEX = '#7c52e0';
+/** Browser icons always use SBC blue, including after a profile theme change. */
+const DEFAULT_PRIMARY_HEX = '#0098ea';
 
 async function getActivePrimary(): Promise<string> {
-  if (activePrimaryHex) return activePrimaryHex;
-  if (!primaryLoadPromise) {
-    primaryLoadPromise = (async () => {
-      const stored = await extStorage.get<string | null>(STORAGE_KEYS.themePrimary, null);
-      activePrimaryHex = isValidHexColor(stored) ? stored : DEFAULT_PRIMARY_HEX;
-      return activePrimaryHex;
-    })();
-  }
-  return primaryLoadPromise;
-}
-
-function isValidHexColor(value: unknown): value is string {
-  return typeof value === 'string' && /^#[0-9a-fA-F]{6}$/.test(value);
+  return DEFAULT_PRIMARY_HEX;
 }
 
 async function loadBaseBitmap(size: IconSize): Promise<ImageBitmap> {
@@ -449,35 +427,16 @@ export function installBadgeHandlers(): void {
     lastVariantByTab.delete(tabId);
   });
 
-  // Theme primary changed in a popup / options / prompt page → drop
-  // the cached tinted bitmaps and re-paint every tab we've previously
-  // set an icon override for. (We can't just rely on the manifest's
-  // default icon kicking in, because chrome.action.setIcon({ tabId })
-  // installs a per-tab override that wins over the default until
-  // explicitly replaced — so an old user's primary tint would persist
-  // on every tab the SW had already touched.)
-  //
-  // We deliberately do NOT short-circuit on `nextHex === activePrimaryHex`:
-  // when the SW was dormant and woke specifically to deliver this event,
-  // its own `getActivePrimary()` lazy-load may have already pulled the
-  // *new* hex from storage before this listener ran, leaving
-  // activePrimaryHex equal to nextHex even though the on-screen icons
-  // (set in a previous SW session, possibly with a different hex) are
-  // still stale. Repainting unconditionally is cheap (renderIcon
-  // memoizes per primary) and guarantees the toolbar reflects the
-  // current theme regardless of SW lifecycle timing.
-  extStorage.onChange<string | undefined>(STORAGE_KEYS.themePrimary, (next) => {
-    const nextHex = isValidHexColor(next) ? next : DEFAULT_PRIMARY_HEX;
-    activePrimaryHex = nextHex;
-    primaryLoadPromise = null;
+  // Repaint existing per-tab overrides when a page updates the icon.
+  // Ignore theme colors stored by older versions; browser icons stay blue.
+  extStorage.onChange<string | undefined>(STORAGE_KEYS.themePrimary, () => {
     plainIconData.clear();
     dotIconData.clear();
     // Drop the per-tab variant memo so setTabIcon repaints even though
     // the abstract variant ('plain'/'dot') hasn't changed.
     lastVariantByTab.clear();
 
-    // Re-paint every tab whose icon we've ever overridden so the new
-    // tint takes effect immediately, not just on the next navigation.
+    // Replace any per-tab override left by an older extension version.
     repaintAllTrackedTabs();
   });
 

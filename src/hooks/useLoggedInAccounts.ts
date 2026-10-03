@@ -1,7 +1,8 @@
 import { useNostr } from '@nostrify/react';
+import { authorQueryOptions } from './useAuthor';
 import { useNostrLogin } from '@nostrify/react/login';
-import { useQuery } from '@tanstack/react-query';
-import { NSchema as n, NostrEvent, NostrMetadata } from '@nostrify/nostrify';
+import { useQueries } from '@tanstack/react-query';
+import { NostrEvent, NostrMetadata } from '@nostrify/nostrify';
 
 export interface Account {
   id: string;
@@ -14,26 +15,16 @@ export function useLoggedInAccounts() {
   const { nostr } = useNostr();
   const { logins, setLogin, removeLogin } = useNostrLogin();
 
-  const { data: authors = [], isLoading } = useQuery({
-    queryKey: ['nostr', 'logins', logins.map((l) => l.id).join(';')],
-    queryFn: async () => {
-      const events = await nostr.query(
-        [{ kinds: [0], authors: logins.map((l) => l.pubkey) }],
-        { signal: AbortSignal.timeout(1500) },
-      );
-
-      return logins.map(({ id, pubkey }): Account => {
-        const event = events.find((e) => e.pubkey === pubkey);
-        try {
-          const metadata = n.json().pipe(n.metadata()).parse(event?.content);
-          return { id, pubkey, metadata, event };
-        } catch {
-          return { id, pubkey, metadata: {}, event };
-        }
-      });
-    },
-    retry: 3,
+  const profiles = useQueries({
+    queries: logins.map(({ pubkey }) => authorQueryOptions(nostr, pubkey)),
   });
+  const authors: Account[] = logins.map(({ id, pubkey }, index) => ({
+    id,
+    pubkey,
+    metadata: profiles[index].data?.metadata ?? {},
+    event: profiles[index].data?.event,
+  }));
+  const isLoading = profiles.some((profile) => profile.isLoading);
 
   // Current user is the first login
   const currentUser: Account | undefined = (() => {
@@ -44,7 +35,7 @@ export function useLoggedInAccounts() {
   })();
 
   // Other users are all logins except the current one
-  const otherUsers = (authors || []).slice(1) as Account[];
+  const otherUsers = authors.slice(1);
 
   return {
     authors,

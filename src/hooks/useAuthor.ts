@@ -1,20 +1,24 @@
-import { type NostrEvent, type NostrMetadata, NSchema as n } from '@nostrify/nostrify';
+import { type NPool, type NostrEvent, type NostrMetadata, NSchema as n } from '@nostrify/nostrify';
 import { useNostr } from '@nostrify/react';
 import { useQuery } from '@tanstack/react-query';
 
 export function useAuthor(pubkey: string | undefined) {
   const { nostr } = useNostr();
 
-  return useQuery<{ event?: NostrEvent; metadata?: NostrMetadata }>({
+  return useQuery(authorQueryOptions(nostr, pubkey));
+}
+
+export function authorQueryOptions(nostr: Pick<NPool, 'query'>, pubkey: string | undefined) {
+  return {
     queryKey: ['nostr', 'author', pubkey ?? ''],
-    queryFn: async () => {
+    queryFn: async (): Promise<{ event?: NostrEvent; metadata?: NostrMetadata }> => {
       if (!pubkey) {
         return {};
       }
 
       const [event] = await nostr.query(
-        [{ kinds: [0], authors: [pubkey!], limit: 1 }],
-        { signal: AbortSignal.timeout(1500) },
+        [{ kinds: [0], authors: [pubkey], limit: 1 }],
+        { signal: AbortSignal.timeout(10_000) },
       );
 
       if (!event) {
@@ -28,7 +32,8 @@ export function useAuthor(pubkey: string | undefined) {
         return { event };
       }
     },
+    enabled: !!pubkey,
     staleTime: 5 * 60 * 1000, // Keep cached data fresh for 5 minutes
     retry: 3,
-  });
+  };
 }

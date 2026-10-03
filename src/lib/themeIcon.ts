@@ -1,27 +1,10 @@
 /**
- * Page-side favicon recoloring.
- *
- * Mirrors the trick from `ditto/src/components/AppProvider.tsx` →
- * `useApplyFavicon`: load the bundled logo SVG, draw it onto a canvas
- * filled with the live theme primary color (using `destination-in` so
- * only the SVG's silhouette is kept), then point the page's
- * `<link rel="icon">` at the resulting data URL.
- *
- * Runs in the popup, prompt, and options window contexts. The SVG used
- * here is bundled by Vite as a hashed asset URL, so it's safe to
- * interpolate directly into a CSS-free `<img src>` without
- * sanitization — the value originates entirely from the build, never
- * from event data.
- *
- * The generated icon is also handed off to the toolbar action via
- * `chrome.action.setIcon` and the primary color is mirrored into
- * `chrome.storage.local` so the background service worker can
- * re-apply the icon on browser startup or when no extension page is
- * open.
+ * Render the SBC logo in brand blue for browser favicons and the toolbar.
+ * Profile themes may change the UI, but browser icons retain the brand color.
+ * Mirror blue into extension storage so the background repaints tab overrides.
  */
 
 import logoUrl from '@/assets/logo.svg';
-import { hslStringToHex } from '@/lib/colorUtils';
 import { extStorage, STORAGE_KEYS } from '@/extension/storage';
 
 /** Sizes Chrome can ask for via `default_icon`. */
@@ -111,16 +94,10 @@ async function buildToolbarImageData(
   return out;
 }
 
-/**
- * Apply a tinted favicon and toolbar icon for the given primary color
- * (HSL string from the active profile theme). Persists the primary to
- * chrome.storage.local so the background service worker can re-render
- * the toolbar icon when the worker is woken without an open page.
- *
- * Idempotent — calling repeatedly with the same primary is cheap.
- */
-export async function applyThemedIcon(primaryHsl: string): Promise<void> {
-  const colorHex = hslStringToHex(primaryHsl);
+/** Apply the blue browser icons when the active profile theme is refreshed. */
+export async function applyThemedIcon(_primaryHsl: string): Promise<void> {
+  // Browser icons retain the SBC brand color regardless of the profile theme.
+  const colorHex = '#0098ea';
 
   // Persist first so even if the canvas work fails (e.g. pre-rendering
   // bug), the SW still has the right color to render with on its own.
