@@ -1,0 +1,223 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (@media (prefers-color-scheme: dark));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-page: var(--page-bg);
+
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
+
+  @keyframes accordion-down {
+    from {
+      height: 0;
+    }
+    to {
+      height: var(--radix-accordion-content-height);
+    }
+  }
+
+  @keyframes accordion-up {
+    from {
+      height: var(--radix-accordion-content-height);
+    }
+    to {
+      height: 0;
+    }
+  }
+}
+
+/* Container utility replacement for v4 (previously configured in tailwind.config) */
+@utility container {
+  margin-inline: auto;
+  padding-inline: 2rem;
+  @media (width >= 1400px) {
+    max-width: 1400px;
+  }
+}
+
+/*
+ * Default theme tokens for the popup, prompt, and options pages.
+ *
+ * When the logged-in user's Nostr profile has a kind 16767 active
+ * profile theme event, themeApply.ts overrides every token below at
+ * runtime via an injected <style id="theme-vars"> tag (with
+ * !important) so the user's chosen theme wins. The values here are
+ * the fallback used when the user has no theme published or hasn't
+ * logged in yet.
+ *
+ * The SBC fallback palette uses blue accents in light and dark modes.
+ * Profile themes can still override these defaults. Secondary tokens
+ * follow the same derivation as src/lib/colorUtils.ts.
+ */
+:root {
+  --radius: 0.75rem;
+
+  /* Core (SBC light theme) */
+  --background: hsl(201 50% 97%);
+  --foreground: hsl(201 25% 12%);
+
+  /*
+   * `--page-bg` is the surface color used by the popup, prompt, and
+   * options page-shell wrappers (the `bg-page` utility, see below).
+   * It defaults to `--background`, so without a custom theme the page
+   * shell looks identical to before. When the user's profile theme
+   * specifies a background image, themeApply.ts swaps this var for
+   * `transparent` so the image painted on `<body>` shows through the
+   * shell instead of being hidden behind an opaque page color. Modal /
+   * popover / dropdown surfaces use `--background`, `--popover`, etc.
+   * directly so they stay opaque and remain readable as overlays.
+   */
+  --page-bg: var(--background);
+
+  --card: hsl(201 50% 97%);
+  --card-foreground: hsl(201 25% 12%);
+
+  --popover: hsl(201 50% 97%);
+  --popover-foreground: hsl(201 25% 12%);
+
+  --primary: hsl(201 100% 35%);
+  --primary-foreground: hsl(0 0% 100%);
+
+  --secondary: hsl(201 50% 93%);
+  --secondary-foreground: hsl(201 25% 12%);
+
+  --muted: hsl(201 50% 93%);
+  --muted-foreground: hsl(201 0% 47%);
+
+  --accent: hsl(201 50% 93%);
+  --accent-foreground: hsl(201 25% 12%);
+
+  --destructive: hsl(0 84.2% 60.2%);
+  --destructive-foreground: hsl(210 40% 98%);
+
+  --border: hsl(201 32.5% 82%);
+  --input: hsl(201 32.5% 82%);
+  --ring: hsl(201 100% 35%);
+
+  --chart-1: hsl(12 76% 61%);
+  --chart-2: hsl(173 58% 39%);
+  --chart-3: hsl(197 37% 24%);
+  --chart-4: hsl(43 74% 66%);
+  --chart-5: hsl(27 87% 67%);
+
+  --sidebar: hsl(201 50% 97%);
+  --sidebar-foreground: hsl(201 25% 12%);
+  --sidebar-primary: hsl(201 100% 35%);
+  --sidebar-primary-foreground: hsl(0 0% 100%);
+  --sidebar-accent: hsl(201 50% 93%);
+  --sidebar-accent-foreground: hsl(201 25% 12%);
+  --sidebar-border: hsl(201 32.5% 82%);
+  --sidebar-ring: hsl(201 100% 35%);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Core (SBC dark theme) */
+    --background: hsl(228 20% 10%);
+    --foreground: hsl(210 40% 98%);
+
+    --card: hsl(228 20% 12%);
+    --card-foreground: hsl(210 40% 98%);
+
+    --popover: hsl(228 20% 12%);
+    --popover-foreground: hsl(210 40% 98%);
+
+    --primary: hsl(201 100% 35%);
+    --primary-foreground: hsl(0 0% 100%);
+
+    --secondary: hsl(228 20% 18%);
+    --secondary-foreground: hsl(210 40% 98%);
+
+    --muted: hsl(228 20% 18%);
+    --muted-foreground: hsl(210 20% 68%);
+
+    --accent: hsl(228 20% 18%);
+    --accent-foreground: hsl(210 40% 98%);
+
+    --destructive: hsl(0 72% 51%);
+    --destructive-foreground: hsl(0 0% 95%);
+
+    --border: hsl(201 28% 30%);
+    --input: hsl(201 28% 30%);
+    --ring: hsl(201 100% 35%);
+
+    --chart-1: hsl(220 70% 50%);
+    --chart-2: hsl(160 60% 45%);
+    --chart-3: hsl(30 80% 55%);
+    --chart-4: hsl(280 65% 60%);
+    --chart-5: hsl(340 75% 55%);
+
+    --sidebar: hsl(228 20% 10%);
+    --sidebar-foreground: hsl(210 40% 98%);
+    --sidebar-primary: hsl(201 100% 35%);
+    --sidebar-primary-foreground: hsl(0 0% 100%);
+    --sidebar-accent: hsl(228 20% 18%);
+    --sidebar-accent-foreground: hsl(210 40% 98%);
+    --sidebar-border: hsl(201 28% 30%);
+    --sidebar-ring: hsl(201 100% 35%);
+  }
+}
+
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-border, currentcolor);
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}

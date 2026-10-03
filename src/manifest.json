@@ -1,0 +1,61 @@
+{
+  "manifest_version": 3,
+  "name": "SBC Signer Extension",
+  "short_name": "SBC Signer Extension",
+  "description": "A Nostr extension. Log into any Nostr client, and comment on any webpage from your browser.",
+  "version": "1.4.0",
+  "action": {
+    "default_popup": "src/popup.html",
+    "default_title": "SBC Signer Extension",
+    "default_icon": {
+      "16": "public/icons/icon-16.png",
+      "32": "public/icons/icon-32.png",
+      "48": "public/icons/icon-48.png",
+      "128": "public/icons/icon-128.png"
+    }
+  },
+  "icons": {
+    "16": "public/icons/icon-16.png",
+    "32": "public/icons/icon-32.png",
+    "48": "public/icons/icon-48.png",
+    "128": "public/icons/icon-128.png"
+  },
+  "background": {
+    "service_worker": "src/extension/background.ts",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["src/extension/content.ts"],
+      "run_at": "document_start",
+      "all_frames": true
+    },
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["src/extension/inpage.ts"],
+      "run_at": "document_start",
+      "all_frames": true,
+      "world": "MAIN"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["src/extension/inpage.ts"],
+      "matches": ["http://*/*", "https://*/*"]
+    }
+  ],
+  "options_ui": {
+    "page": "src/options.html",
+    "open_in_tab": true
+  },
+  "permissions": [
+    "storage",
+    "tabs",
+    "contextMenus"
+  ],
+  "host_permissions": [
+    "http://*/*",
+    "https://*/*"
+  ]
+}
