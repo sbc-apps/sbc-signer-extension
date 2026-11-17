@@ -5,6 +5,7 @@
  *  - Header with product branding
  *  - Per-site permissions (expanded)
  *  - Logged-out prompt when no account is active
+ *  - Footer with the extension version
  */
 
 import {
@@ -90,6 +91,12 @@ export function Options() {
             </div>
           </div>
         </section>
+
+        <footer className="flex justify-center">
+          <span className="rounded-full border bg-background/85 backdrop-blur px-3 py-1 text-xs text-muted-foreground">
+            SBC Signer Extension v{__APP_VERSION__}
+          </span>
+        </footer>
       </main>
     </div>
   );

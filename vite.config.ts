@@ -6,6 +6,7 @@ import { crx } from "@crxjs/vite-plugin";
 import { defineConfig } from "vitest/config";
 
 import manifest from "./src/manifest.json" with { type: "json" };
+import pkg from "./package.json" with { type: "json" };
 
 // https://vitejs.dev/config/
 export default defineConfig(() => ({
@@ -13,10 +14,17 @@ export default defineConfig(() => ({
     host: "::",
     port: 8080,
   },
+  // `package.json` is the single source of truth for the version: it's
+  // stamped into the built manifest and exposed to the UI as
+  // `__APP_VERSION__`. `scripts/sync-version.mjs` keeps the copy in
+  // `src/manifest.json` in step for anyone reading the source.
+  define: {
+    __APP_VERSION__: JSON.stringify(pkg.version),
+  },
   plugins: [
     react(),
     tailwindcss(),
-    crx({ manifest }),
+    crx({ manifest: { ...manifest, version: pkg.version } }),
   ],
   build: {
     outDir: "dist/chrome",

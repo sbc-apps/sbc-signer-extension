@@ -1,0 +1,138 @@
+# Publishes a GitHub Release whenever the extension version changes.
+#
+# `package.json` is the single source of truth for the version. On every
+# push to `main` this workflow checks whether a release named
+# `v<version>` already exists. If it doesn't, it runs the full test
+# suite, builds the Chrome and Firefox packages, tags the pushed commit
+# and publishes the release with both ZIPs attached. Pushes that leave
+# the version unchanged finish after the first job and publish nothing.
+#
+# To ship a new version: `npm version patch|minor|major`, then push.
+
+name: Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Never run two releases at once, and never cancel one half-way through.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  detect:
+    name: Detect new version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
+      needed: ${{ steps.existing.outputs.needed }}
+    steps:
+      - name: Check out package.json
+        uses: actions/checkout@v5
+        with:
+          sparse-checkout: package.json
+          sparse-checkout-cone-mode: false
+
+      - name: Read version
+        id: version
+        run: |
+          version=$(node -p "require('./package.json').version")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=v$version" >> "$GITHUB_OUTPUT"
+
+      - name: Check for an existing release
+        id: existing
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          if output=$(gh release view "$TAG" --json tagName 2>&1); then
+            echo "Release $TAG already exists; nothing to publish."
+            echo "needed=false" >> "$GITHUB_OUTPUT"
+          elif grep -q "release not found" <<<"$output"; then
+            echo "No release for $TAG yet; building one."
+            echo "needed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "$output" >&2
+            exit 1
+          fi
+
+  release:
+    name: Build and publish ${{ needs.detect.outputs.tag }}
+    needs: detect
+    if: needs.detect.outputs.needed == 'true' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      VERSION: ${{ needs.detect.outputs.version }}
+      TAG: ${{ needs.detect.outputs.tag }}
+    steps:
+      - name: Check out
+        uses: actions/checkout@v5
+        with:
+          # Full history + tags so the release notes can list every
+          # commit since the previous release.
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check version format and manifest sync
+        run: node scripts/sync-version.mjs --check
+
+      - name: Test (tsc, eslint, vitest, Chrome + Firefox builds, web-ext lint)
+        run: npm test
+
+      - name: Package Chrome and Firefox builds
+        run: |
+          npm run package:chrome
+          npm run package:firefox
+          ls -l dist/artifacts
+
+      - name: Write release notes
+        run: |
+          prev_tag=$(git tag --list 'v[0-9]*' --merged HEAD --sort=-v:refname | grep -vxF "$TAG" | head -n 1 || true)
+          if [ -n "$prev_tag" ]; then range="$prev_tag..HEAD"; else range="HEAD"; fi
+
+          {
+            echo "## Install"
+            echo
+            echo "- **Chrome / Chromium:** download \`sbc-signer-extension-chrome-$VERSION.zip\`, unzip it, open \`chrome://extensions\`, enable **Developer mode**, click **Load unpacked** and select the unzipped folder."
+            echo "- **Firefox:** download \`sbc-signer-extension-firefox-$VERSION.zip\`, open \`about:debugging#/runtime/this-firefox\`, click **Load Temporary Add-on** and select the ZIP. This is also the package to upload to addons.mozilla.org."
+            echo
+            echo "## Changes"
+            echo
+            git log --no-merges --pretty='- %s (%h)' "$range"
+            if [ -n "$prev_tag" ]; then
+              echo
+              echo "**Full changelog:** https://github.com/$GITHUB_REPOSITORY/compare/$prev_tag...$TAG"
+            fi
+          } > "$RUNNER_TEMP/release-notes.md"
+
+          cat "$RUNNER_TEMP/release-notes.md"
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh release create "$TAG" \
+            "dist/artifacts/sbc-signer-extension-chrome-$VERSION.zip" \
+            "dist/artifacts/sbc-signer-extension-firefox-$VERSION.zip" \
+            --target "$GITHUB_SHA" \
+            --title "SBC Signer Extension $TAG" \
+            --notes-file "$RUNNER_TEMP/release-notes.md"

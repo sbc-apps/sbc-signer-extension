@@ -78,6 +78,21 @@ The Firefox build reuses the same bundled code as the Chromium build, but rewrit
 npm test            # tsc + eslint + vitest + Chrome build + Firefox build/lint
 ```
 
+### Versioning and releases
+
+The version lives in `package.json` and is the single source of truth. Builds stamp it into the extension manifest, and the Settings page shows it in its footer. `src/manifest.json` keeps a copy that `scripts/sync-version.mjs` updates automatically.
+
+To ship a new version:
+
+```bash
+npm version patch   # or minor / major — bumps package.json, package-lock.json and src/manifest.json, commits, and tags vX.Y.Z
+git push --follow-tags
+```
+
+On every push to `main`, the [Release workflow](.github/workflows/release.yml) checks whether a GitHub Release exists for the current version. If not, it runs `npm test`, builds the Chrome and Firefox packages, and publishes a `vX.Y.Z` release with `sbc-signer-extension-chrome-X.Y.Z.zip` and `sbc-signer-extension-firefox-X.Y.Z.zip` attached. Pushes that don't change the version publish nothing.
+
+Versions must be plain `MAJOR.MINOR.PATCH` integers. Browsers reject pre-release suffixes such as `-beta.1` in an extension version.
+
 ## Security notes
 
 - Your `nsec` is stored in plaintext in extension-local storage. Any code running inside the extension can read it — keep the code tree small and audit new dependencies carefully.

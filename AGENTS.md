@@ -109,6 +109,10 @@ error.
 5. **Run tests** (if available): `npm test`
 6. **Git commit** (required)
 
+### Versioning and releases
+
+`package.json` `version` is the single source of truth. Vite stamps it into the built manifest and exposes it to the UI as `__APP_VERSION__`. Bump it with `npm version patch|minor|major`; the `version` lifecycle script runs `scripts/sync-version.mjs` to update `src/manifest.json` in the same commit. Never edit the manifest version by hand. Pushing a new version to `main` makes `.github/workflows/release.yml` publish a GitHub Release with the Chrome and Firefox ZIPs. Versions must be plain `MAJOR.MINOR.PATCH` integers, because browsers reject pre-release suffixes. Only bump the version when the user asks for a release.
+
 ### Using Git
 
 Use `git status` / `git diff` to review changes and `git log` to learn project conventions. If you make a mistake, `git checkout` restores files.

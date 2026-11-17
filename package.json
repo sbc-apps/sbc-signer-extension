@@ -10,7 +10,8 @@
     "build:firefox": "npm run build:chrome && node scripts/prepare-firefox-build.mjs",
     "lint:firefox": "web-ext lint --source-dir dist/firefox",
     "package:chrome": "npm run build:chrome && mkdir -p dist/artifacts && rm -f \"dist/artifacts/sbc-signer-extension-chrome-$npm_package_version.zip\" && cd dist/chrome && zip -qr \"../artifacts/sbc-signer-extension-chrome-$npm_package_version.zip\" . && echo \"Chrome package written to dist/artifacts/sbc-signer-extension-chrome-$npm_package_version.zip\"",
-    "package:firefox": "npm run build:firefox && web-ext build --source-dir dist/firefox --artifacts-dir dist/artifacts --overwrite-dest",
+    "package:firefox": "npm run build:firefox && web-ext build --source-dir dist/firefox --artifacts-dir dist/artifacts --filename \"sbc-signer-extension-firefox-{version}.zip\" --overwrite-dest",
+    "version": "node scripts/sync-version.mjs && git add src/manifest.json",
     "test": "npm i --silent && tsc --noEmit && eslint --cache && vitest run --reporter=dot --silent && npm run build:firefox && npm run lint:firefox && echo 'All tests passed!'",
     "sources": "zip -r \"dist/extension-sources-v$(node -p \"require('./package.json').version\").zip\" . -x \"dist/*\" \"node_modules/*\" \".git/*\" \".agents/*\""
   },
